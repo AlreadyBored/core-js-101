@@ -101,24 +101,6 @@ function getFastestPromise(array) {
  *
  */
 function chainPromises(array, action) {
-/*   const res = [];
-  array.forEach((promise) => {
-    Promise.resolve(promise)
-      .then((val) => {
-        res.push(val);
-      }, (err) => {
-        res.push(`Error occured: ${err}`);
-      });
-  });
-  console.log(`RES ARRAY1: ${res}`);
-  res.filter((item) => {
-    if (typeof item !== 'string') return true;
-    if (item.indexOf('Error occured:') !== -1) return false;
-    return true;
-  });
-  console.log(`INITAL ARRAY: ${array}`);
-  console.log(`RES ARRAY2: ${res}`);
-  return res.reduce(action); */
   return new Promise((resolve) => {
     const resArr = [];
     const errArr = [];
