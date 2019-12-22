@@ -118,32 +118,183 @@ function fromJSON(proto, json) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selectorStr: '',
+  order: 0,
+  isCB: false,
+  priorityDictionary: {
+    element: 1,
+    id: 2,
+    class: 3,
+    attr: 4,
+    pseudoClass: 5,
+    pseudoElement: 6,
+  },
+  uniquePositions: [1, 2, 6],
+  errors: {
+    occurenceError: 'Element, id and pseudo-element should not occur more then one time inside the selector',
+    orderError: 'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element',
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  addPart(params) {
+    const order = this.priorityDictionary[params.part];
+    this.checkCorrectness(order);
+    const closureBuilder = params.initCB;
+    closureBuilder.selectorStr += params.partValue;
+    closureBuilder.order = order;
+
+    return closureBuilder;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  checkCorrectness(currOrder) {
+    const flags = {
+      orderCorrect: this.checkOrder(currOrder),
+      occurenceCorrect: this.checkOccurences(currOrder),
+    };
+
+    if (!flags.orderCorrect) throw new Error(this.errors.orderError);
+    if (!flags.occurenceCorrect) throw new Error(this.errors.occurenceError);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  checkOccurences(order) {
+    if (this.order === order && this.uniquePositions.includes(order)) {
+      return false;
+    }
+    return true;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  checkOrder(order) {
+    if (this.order > order) {
+      return false;
+    }
+
+    return true;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'element',
+      partValue: value,
+      initCB,
+    });
+
+    return cb;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  id(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'id',
+      partValue: `#${value}`,
+      initCB,
+    });
+
+    return cb;
+  },
+
+  class(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'class',
+      partValue: `.${value}`,
+      initCB,
+    });
+
+    return cb;
+  },
+
+  attr(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'attr',
+      partValue: `[${value}]`,
+      initCB,
+    });
+
+    return cb;
+  },
+
+  pseudoClass(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'pseudoClass',
+      partValue: `:${value}`,
+      initCB,
+    });
+
+    return cb;
+  },
+
+  pseudoElement(value) {
+    let initCB;
+
+    if (!this.isCB) {
+      initCB = { ...cssSelectorBuilder };
+      initCB.isCB = true;
+    } else {
+      initCB = this;
+    }
+    const cb = this.addPart({
+      part: 'pseudoElement',
+      partValue: `::${value}`,
+      initCB,
+    });
+
+    return cb;
+  },
+
+  combine(selector1, combinator, selector2) {
+    const closureBuilder = { ...cssSelectorBuilder };
+    closureBuilder.selectorStr = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+
+    return closureBuilder;
+  },
+
+  clearString() {
+    this.selectorStr = '';
+    this.order = 0;
+  },
+
+  stringify() {
+    const currStr = this.selectorStr;
+    this.clearString();
+
+    return currStr;
   },
 };
 
